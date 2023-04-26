@@ -4,39 +4,12 @@ import { RouteRecordRaw } from "vue-router";
 const routes: Array<RouteRecordRaw> = [
   // DEFAULT LAYOUT
   {
-    path: "",
-    redirect: "/login",
-    component: () => import("@/layouts/default.vue"),
-    children: [
-      {
-        path: "/home",
-        component: () => import("@/views/home.vue"),
-      },
-      {
-        path: "/about",
-        component: () => import("@/views/about.vue"),
-      },
-    ],
+    path: "/home",
+    component: () => import("@/views/MainPage.vue"),
   },
-
-  // BLANK LAYOUT
   {
-    path: "",
-    component: () => import("@/layouts/blank.vue"),
-    children: [
-      {
-        path: "/blank",
-        component: () => import("@/views/blank.vue"),
-      },
-      {
-        path: "/login",
-        component: () => import("@/views/login.vue"),
-      },
-      {
-        path: "/register",
-        component: () => import("@/views/register.vue"),
-      },
-    ],
+    path: "/about",
+    component: () => import("@/views/about.vue"),
   },
 
   // NOT FOUND
