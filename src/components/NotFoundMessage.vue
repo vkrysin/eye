@@ -1,20 +1,20 @@
 <template>
   <div id="container">
-    <strong>Halaman tidak ditemukan</strong>
+    <strong>Страница не найдена</strong>
     <div class="m-3">
-      <a class="text-primary" href="/home">Kembali</a>
+      <a class="text-primary" href="/home">Перейти на главную</a>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'ExploreContainer',
+  name: "ExploreContainer",
   props: {
-    name: String
-  }
+    name: String,
+  },
 });
 </script>
 

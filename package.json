@@ -19,6 +19,7 @@
     "@ionic/vue": "^6.0.0",
     "@ionic/vue-router": "^6.0.0",
     "@types/yup": "^0.32.0",
+    "axios": "^1.4.0",
     "core-js": "^3.6.5",
     "ionicons": "^6.0.3",
     "sass": "^1.56.1",
@@ -47,6 +48,7 @@
     "autoprefixer": "^10.4.13",
     "babel-jest": "^27.3.1",
     "cypress": "^8.7.0",
+    "d3": "^7.8.4",
     "eslint": "^8.4.1",
     "eslint-plugin-vue": "^8.2.0",
     "jest": "^27.3.1",
@@ -57,5 +59,6 @@
     "ts-jest": "^27.0.7",
     "typescript": "^4.3.5"
   },
-  "description": "An Ionic project"
+  "description": "An Ionic project",
+  "proxy": "ttps://6e72-94-143-243-49.ngrok-free.app/api"
 }

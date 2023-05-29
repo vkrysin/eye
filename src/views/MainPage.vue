@@ -1,44 +1,52 @@
 <template>
   <ion-header>
-    <ion-toolbar class="font-sans text-black">
-      <ion-title class="text-xl">Список оборудования(16)</ion-title>
+    <ion-toolbar class="flex h-16 font-sans text-black">
+      <ion-title class="text-2xl"
+        >Список оборудования({{ equipment.length }})</ion-title
+      >
       <!-- <ion-progress-bar type="indeterminate"></ion-progress-bar> -->
     </ion-toolbar>
   </ion-header>
-  <ion-content class="h-[85%] overflow-y-scroll">
+  <ion-content class="h-[85%] overflow-y-auto">
     <div class="mt-2 flex flex-wrap justify-between">
+      <!-- :class="{ 'w-full': item.type === 'group' }" -->
       <ion-card
         v-for="item in equipment.sort(compare)"
-        :key="item.name"
-        class="w-[44%]"
-        :class="{ 'w-full': item.type === 'group' }"
+        :key="item._id"
+        class="w-[44%] hover:cursor-pointer"
+        @click="openEquipmentPage(item)"
       >
         <ion-card-header
           class="-mr-7 flex items-center justify-between pl-3 pt-2 pb-0"
         >
           <ion-toggle
-            v-model="item.isTracking"
+            v-model="item.is_tracked"
             mode="ios"
             color="success"
+            @click.stop="toggleTracking(item)"
           ></ion-toggle>
-          <ion-card-subtitle
-            v-if="item.type === 'group'"
+          <!-- <ion-card-subtitle
+            v-if="item.type == 'group'"
             class="mt-2 flex justify-center pl-3 font-sans text-xl font-medium text-black"
             >{{ item.name }}</ion-card-subtitle
+          > -->
+          <div
+            class="mr-5 flex justify-center hover:cursor-pointer active:scale-95"
+            @click.stop="openAlert(item)"
           >
-          <div class="mr-5 flex justify-center active:scale-95">
             <ion-icon class="h-10 w-10" color="dark" :icon="closeOutline" />
           </div>
         </ion-card-header>
-        <template v-if="item.type !== 'group'">
-          <div class="flex justify-center">
-            <ion-icon
-              class="h-16 w-16 pl-3"
-              :icon="item.type === 'camera' ? cameraOutline : radioOutline"
-            ></ion-icon>
-          </div>
-        </template>
-        <template v-else>
+        <div class="flex justify-center">
+          <ion-icon
+            class="h-16 w-16 pl-3"
+            :icon="item.type === 'camera' ? cameraOutline : radioOutline"
+          ></ion-icon>
+        </div>
+        <div class="flex justify-center py-2 text-base">
+          {{ item.title ? item.title : "no-title" }}
+        </div>
+        <!-- <template v-else>
           <ion-list>
             <ion-item
               v-for="sensor in item.children"
@@ -57,20 +65,25 @@
                 </div>
               </div>
 
-              <div class="-mr-2 flex justify-center active:scale-95" slot="end">
+              <div
+                class="-mr-2 flex justify-center active:scale-95"
+                slot="end"
+                @click="openAlert('датчик')"
+              >
                 <ion-icon class="h-7 w-7 text-red-700" :icon="trashOutline" />
               </div>
             </ion-item>
           </ion-list>
-        </template>
+        </template> -->
 
-        <div
-          v-if="item.type !== 'group'"
-          class="flex items-center justify-end py-2 pr-4 font-sans text-base font-bold text-green-600"
-        >
-          {{ item.signalQuality }}
-        </div>
-        <div
+        <!-- <div>
+          <div
+            class="flex items-center justify-end py-2 pr-4 font-sans text-base font-bold text-green-600"
+          >
+            {{ item.signalQuality }}
+          </div>
+        </div> -->
+        <!-- <div
           v-else
           class="ml-24 flex items-center justify-between py-3 text-base"
         >
@@ -82,10 +95,14 @@
               item.signalQuality
             }}</span>
           </div>
-          <div class="mr-3 flex justify-center active:scale-95" slot="end">
+          <div
+            class="mr-3 flex justify-center active:scale-95"
+            slot="end"
+            @click="openAddSensorPage"
+          >
             <ion-icon class="h-8 w-8 text-green-600" :icon="addCircleOutline" />
           </div>
-        </div>
+        </div> -->
       </ion-card>
     </div>
   </ion-content>
@@ -94,11 +111,13 @@
       <div class="flex items-center justify-between px-7">
         <div
           class="flex items-center rounded-lg bg-[#e4e4e4] px-10 py-0.5 active:scale-95"
+          @click="openAddSensorPage"
         >
           <ion-icon class="h-10 w-10" color="dark" :icon="radioOutline" />
         </div>
         <div
           class="flex items-center rounded-lg bg-[#e4e4e4] px-10 py-0.5 active:scale-95"
+          @click="openAddCameraPage"
         >
           <img
             class="h-10 w-10"
@@ -109,10 +128,17 @@
       </div>
     </ion-toolbar>
   </ion-footer>
+  <ion-alert
+    :is-open="isAlertOpen"
+    :header="alertHeader"
+    :buttons="alertButtons"
+  ></ion-alert>
 </template>
 
 <script lang="ts" setup>
 import { ref } from "vue";
+import axios from "axios";
+
 import {
   IonHeader,
   IonToolbar,
@@ -122,10 +148,11 @@ import {
   IonCardSubtitle,
   IonCardHeader,
   IonIcon,
-  IonButton,
   IonFooter,
   IonContent,
   IonList,
+  IonItem,
+  IonAlert,
 } from "@ionic/vue";
 import {
   cameraOutline,
@@ -135,84 +162,153 @@ import {
   addCircleOutline,
 } from "ionicons/icons";
 
-const equipment = ref([
+import { useRouter } from "vue-router";
+const router = useRouter();
+
+const equipment1 = ref([
   {
     type: "camera",
-    name: "Camera 1",
-    isTracking: true,
-    signalQuality: 80,
-  },
-  {
-    type: "camera",
-    name: "Camera 4",
-    isTracking: false,
-    signalQuality: 80,
-  },
-  {
-    type: "camera",
-    name: "Camera 3",
-    isTracking: true,
-    signalQuality: 80,
-  },
-  {
-    type: "sensor",
-    name: "Sensor 2",
-    isTracking: false,
-    signalQuality: 80,
-  },
-  {
-    type: "camera",
-    name: "Camera 1",
-    isTracking: true,
-    signalQuality: 80,
-  },
-  {
-    type: "camera",
-    name: "Camera 4",
-    isTracking: false,
-    signalQuality: 80,
-  },
-  {
-    type: "camera",
-    name: "Camera 3",
-    isTracking: true,
-    signalQuality: 80,
-  },
-  {
-    type: "sensor",
-    name: "Sensor 2",
-    isTracking: false,
-    signalQuality: 80,
-  },
-  {
-    type: "group",
-    name: "Sensors G",
-    isTracking: false,
-    signalQuality: 80,
-    children: [
-      {
-        type: "sensor",
-        name: "Sensor 3",
-        isTracking: false,
-        signalQuality: 80,
-      },
-      {
-        type: "sensor",
-        name: "Sensor 4",
-        isTracking: false,
-        signalQuality: 80,
-      },
-    ],
+    is_tracked: "camera",
+    title: "Camera 1",
+    url: "",
+    zmq_port: 2180,
+    _id: "fdsfd",
   },
 ]);
 
+const equipment = ref([]);
+
+const isAlertOpen = ref(false);
+const alertHeader = ref("Датчик");
+
+const currentRemovedEquipment = ref({});
+
+const alertButtons = [
+  {
+    text: "Отмена",
+    role: "cancel",
+    handler: () => {
+      closeAlert();
+    },
+  },
+  {
+    text: "Да",
+    role: "confirm",
+    handler: () => {
+      removeEquipment(
+        currentRemovedEquipment.value._id,
+        currentRemovedEquipment.value.type
+      );
+      closeAlert();
+    },
+  },
+];
+
+getEquipment();
+
+function openAlert(equipment: object) {
+  currentRemovedEquipment.value = equipment;
+
+  const name = equipment.type === "camera" ? "камеру" : "датчик";
+  alertHeader.value = `Удалить ${name}?`;
+  isAlertOpen.value = true;
+}
+
+function closeAlert() {
+  isAlertOpen.value = false;
+}
+
+function getEquipment() {
+  equipment.value = [];
+
+  axios
+    .get("https://6e72-94-143-243-49.ngrok-free.app/api/cameras")
+    .then((res) => {
+      res.data.forEach((item) =>
+        equipment.value.push({
+          ...item,
+          type: "camera",
+        })
+      );
+    });
+
+  axios
+    .get("https://6e72-94-143-243-49.ngrok-free.app/api/sensors")
+    .then((res) => {
+      res.data.forEach((item) =>
+        equipment.value.push({
+          ...item,
+          type: "sensor",
+        })
+      );
+    });
+
+  console.log(equipment.value);
+}
+
+function removeEquipment(id: string, type: string) {
+  if (type === "camera") {
+    axios
+      .delete(`https://6e72-94-143-243-49.ngrok-free.app/api/cameras/${id}`)
+      .then(() => getEquipment());
+  } else {
+    axios
+      .delete(`https://6e72-94-143-243-49.ngrok-free.app/api/sensors/${id}`)
+      .then(() => getEquipment());
+  }
+}
+
+function toggleTracking(item) {
+  if (item.is_tracked) {
+    axios.post(
+      `https://6e72-94-143-243-49.ngrok-free.app/api/${item.type}s/${item._id}/tracking/stop`
+    );
+  } else {
+    axios.post(
+      `https://6e72-94-143-243-49.ngrok-free.app/api/${item.type}s/${item._id}/tracking/start`
+    );
+  }
+}
+
 function compare(a, b) {
-  if (a.name < b.name) {
+  if (a.title < b.title) {
     return -1;
   }
-  if (a.name > b.name) {
+  if (a.title > b.title) {
     return 1;
   }
   return 0;
 }
+
+function openAddCameraPage() {
+  router.push("/add_equipment/camera");
+}
+function openAddSensorPage() {
+  router.push("/add_equipment/sensor");
+}
+
+function openEquipmentPage(item) {
+  router.push({
+    name: "equipmentPage",
+    params: { id: item._id, equipmentType: item.type },
+  });
+}
 </script>
+<style>
+ion-alert.custom-alert {
+  --backdrop-opacity: 0.7;
+}
+
+.custom-alert .alert-button-group {
+  padding: 8px;
+}
+
+button.alert-button.alert-button-confirm {
+  background-color: var(--ion-color-success);
+  color: var(--ion-color-success-contrast);
+}
+
+.md button.alert-button.alert-button-confirm {
+  border-radius: 4px;
+}
+</style>
