@@ -132,7 +132,7 @@ onMounted(() => {
   const xAxis = g
     .append("g")
     .attr("transform", `translate(${0},${height - margin.bottom})`)
-    .call(axisBottom(x).ticks(4).tickFormat(timeFormat("%H:%M")));
+    .call(axisBottom(x).ticks(4).tickFormat(timeFormat("%m.%d")));
   const yAxis = g
     .append("g")
     .attr("transform", `translate(${margin.left}, 0)`)

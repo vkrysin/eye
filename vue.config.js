@@ -9,5 +9,5 @@ module.exports = {
   //     },
   //   },
   // },
-  publicPath: "./eye",
+  // publicPath: "./eye",
 };
